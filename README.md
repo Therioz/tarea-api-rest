@@ -169,19 +169,3 @@ curl -X PATCH http://localhost:3000/tasks/1/status \
 * **Filtros**: búsqueda por texto (`search`), filtrado por estado y rango de fechas.
 * **Endpoints**: se definió `PATCH /tasks/:id/status` exclusivamente para actualizar estado, cumpliendo con el requerimiento.
 
----
-
-## 📊 Prisma Studio (opcional)
-
-Para ver los datos en una interfaz gráfica:
-
-```bash
-npx prisma studio
-```
-
----
-
-## 📌 Notas
-
-* Este proyecto es una solución de referencia para un desafío técnico.
-* En producción se recomienda un sistema más robusto de autenticación (ej. JWT, OAuth, API Keys por usuario).
