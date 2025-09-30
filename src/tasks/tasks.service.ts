@@ -1,56 +1,74 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
+import { Task, TaskStatus } from "@prisma/client";
 import { PrismaService } from "../prisma/prisma.service";
-import { CreateTaskDto } from "./dto/create-task.dto";
-import { UpdateStatusDto } from "./dto/update-status.dto";
-import { Prisma } from "@prisma/client";
+import {
+  CreateTaskDto,
+  UpdateTaskStatusDto,
+  TaskFilterDto,
+} from "./dto/task.dto";
 
 @Injectable()
 export class TasksService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createTaskDto: CreateTaskDto) {
-    const data: Prisma.TaskCreateInput = {
-      title: createTaskDto.title,
-      description: createTaskDto.description ?? null,
-      dueDate: createTaskDto.dueDate ? new Date(createTaskDto.dueDate) : null,
-    };
-    return this.prisma.task.create({ data });
+  async createTask(createTaskDto: CreateTaskDto): Promise<Task> {
+    const { dueDate, ...rest } = createTaskDto;
+
+    return this.prisma.task.create({
+      data: {
+        ...rest,
+        dueDate: dueDate ? new Date(dueDate) : null,
+      },
+    });
   }
 
-  // Filters: status, search (title/description), dueBefore, dueAfter, limit, offset
-  async findAll(query: any) {
-    const where: Prisma.TaskWhereInput = {};
-    if (query.status) where.status = query.status;
-    if (query.search) {
-      where.OR = [
-        { title: { contains: query.search, mode: "insensitive" } },
-        { description: { contains: query.search, mode: "insensitive" } },
-      ];
-    }
-    if (query.dueBefore || query.dueAfter) {
-      where.dueDate = {};
-      if (query.dueBefore)
-        (where.dueDate as any).lt = new Date(query.dueBefore);
-      if (query.dueAfter) (where.dueDate as any).gt = new Date(query.dueAfter);
-    }
-
-    const take = query.limit ? Number(query.limit) : 20;
-    const skip = query.offset ? Number(query.offset) : 0;
+  async findAllTasks(filters: TaskFilterDto): Promise<Task[]> {
+    const { status, search } = filters;
 
     return this.prisma.task.findMany({
-      where,
-      orderBy: { createdAt: "desc" },
-      take,
-      skip,
+      where: {
+        ...(status && { status }),
+        ...(search && {
+          OR: [
+            { title: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+          ],
+        }),
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
     });
   }
 
-  async updateStatus(id: number, updateStatusDto: UpdateStatusDto) {
-    const task = await this.prisma.task.findUnique({ where: { id } });
-    if (!task) throw new NotFoundException("Task not found");
+  async updateTaskStatus(
+    id: string,
+    updateTaskStatusDto: UpdateTaskStatusDto
+  ): Promise<Task> {
+    // Verificar que la tarea existe
+    const existingTask = await this.prisma.task.findUnique({
+      where: { id },
+    });
+
+    if (!existingTask) {
+      throw new NotFoundException(`Task with ID ${id} not found`);
+    }
+
     return this.prisma.task.update({
       where: { id },
-      data: { status: updateStatusDto.status },
+      data: { status: updateTaskStatusDto.status },
     });
+  }
+
+  async findTaskById(id: string): Promise<Task> {
+    const task = await this.prisma.task.findUnique({
+      where: { id },
+    });
+
+    if (!task) {
+      throw new NotFoundException(`Task with ID ${id} not found`);
+    }
+
+    return task;
   }
 }

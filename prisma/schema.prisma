@@ -7,17 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Status {
+model Task {
+  id          String     @id @default(cuid())
+  title       String
+  description String?
+  createdAt   DateTime   @default(now())
+  dueDate     DateTime?
+  status      TaskStatus @default(PENDING)
+  updatedAt   DateTime   @updatedAt
+
+  @@map("tasks")
+}
+
+enum TaskStatus {
   PENDING
   IN_PROGRESS
   COMPLETED
-}
-
-model Task {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String?
-  createdAt   DateTime @default(now())
-  dueDate     DateTime?
-  status      Status   @default(PENDING)
 }
