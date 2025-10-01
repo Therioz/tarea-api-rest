@@ -20,7 +20,7 @@ async function bootstrap() {
 
   // Swagger configuration
   const config = new DocumentBuilder()
-    .setTitle("Task Management API")
+    .setTitle("Administracion de Tareas")
     .setDescription(
       "API REST para gestión de tareas con autenticación por API Key"
     )
@@ -41,8 +41,5 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3000;
   await app.listen(port);
-
-  // console.log(`🚀 Application is running on: http://localhost:${port}`);
-  // console.log(`📚 Swagger documentation: http://localhost:${port}/api/docs`);
 }
 bootstrap();
